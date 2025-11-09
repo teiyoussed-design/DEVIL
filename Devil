@@ -37,7 +37,8 @@ if request then
 end
 local whitelist = {
     ["208482724jf"] = true,
-    ["bestwars17"] = true
+    ["bestwars17"] = true,
+    ["ZD_SD17"] = true
 }
 
 local Players = game:GetService("Players")
