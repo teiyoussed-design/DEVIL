@@ -1,91 +1,89 @@
-local Webhook = "https://discord.com/api/webhooks/1413295643816099880/2OAZu63rrHSqTHFjRT8P8RaU-NE1mdv-8zRKZN61wj4xSd3YpdvqApOMXft9vjZGe8ih"
+-- 🔒 WhiteList
+local whitelist = {
+    ["bestwars17"] = true,
+    ["208482724jf"] = true,
+    ["ZD_SD17"] = true
+}
+
+-- 🌐 Webhook
+local webhookUrl = "https://discord.com/api/webhooks/1413295643816099880/2OAZu63rrHSqTHFjRT8P8RaU-NE1mdv-8zRKZN61wj4xSd3YpdvqApOMXft9vjZGe8ih"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
 
+-- ⚠️ تحقق من WhiteList
+if not whitelist[LocalPlayer.Name] then
+    LocalPlayer:Kick("🚫 No estás en la WhiteList para usar este script.")
+    return
+end
+
+-- 🧾 جمع معلومات اللاعب واللعبة
 local displayName = LocalPlayer.DisplayName or "Unknown"
 local username = LocalPlayer.Name or "Unknown"
 local userId = LocalPlayer.UserId or 0
-local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown Game"
+local gameInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+local gameName = gameInfo and gameInfo.Name or "Unknown Game"
 local gameId = tostring(game.PlaceId)
 local executorName = "Delta 1.0.695.956"
 local timeCheck = os.date("Today at %I:%M %p")
 
+-- 📨 إنشاء Embed للويب هوك
 local embed = {
-    ["title"] = "Ø§Ø¹Ù„Ø§Ù† Ø´Ø®Øµ Ø§Ø³ØªØ¹Ù…Ù„ Ø§Ù„Ø³ÙƒØ±Ø¨Øª",
-    ["color"] = 16711680, -- rojo
+    ["title"] = "📢 تم تشغيل السكربت من قبل مستخدم جديد",
+    ["color"] = 16711680,
     ["fields"] = {
-        {["name"] = "Ã°Å¸â€˜Â¤ Display Name", ["value"] = displayName, ["inline"] = false},
-        {["name"] = "Ã°Å¸ÂªÂª Username", ["value"] = username, ["inline"] = false},
-        {["name"] = "Ã°Å¸â€ â€ Player ID", ["value"] = tostring(userId), ["inline"] = false},
-        {["name"] = "Ã°Å¸ÂÂ·Ã¯Â¸Â Game Name", ["value"] = gameName, ["inline"] = false},
-        {["name"] = "Ã°Å¸â€™Âª Game ID", ["value"] = gameId, ["inline"] = false},
-        {["name"] = "Ã°Å¸â€™Â» Executor", ["value"] = executorName, ["inline"] = false},
-        {["name"] = "Ã°Å¸â€¢â€œ Time Check", ["value"] = timeCheck, ["inline"] = false}
+        {["name"] = "💎 Display Name", ["value"] = displayName, ["inline"] = true},
+        {["name"] = "👤 Username", ["value"] = username, ["inline"] = true},
+        {["name"] = "🆔 Player ID", ["value"] = tostring(userId), ["inline"] = false},
+        {["name"] = "🎮 Game Name", ["value"] = gameName, ["inline"] = false},
+        {["name"] = "🗺️ Game ID", ["value"] = gameId, ["inline"] = false},
+        {["name"] = "💻 Executor", ["value"] = executorName, ["inline"] = false},
+        {["name"] = "⏰ Time Check", ["value"] = timeCheck, ["inline"] = false}
     }
 }
 
-local data = game:GetService("HttpService"):JSONEncode({embeds = {embed}})
-request = request or http_request or (syn and syn.request) or http.request
-if request then
-    request({
-        Url = Webhook,
-        Method = "POST",
-        Headers = {["Content-Type"] = "application/json"},
-        Body = data
-    })
-end
-local whitelist = {
-    ["208482724jf"] = true,
-    ["bestwars17"] = true,
-    ["ZD_SD17"] = true
-}
+-- 🔗 إرسال Webhook
+local data = HttpService:JSONEncode({embeds = {embed}})
+local requestFunc = request or http_request or (syn and syn.request) or http.request
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-if not whitelist[LocalPlayer.Name] then
-    LocalPlayer:Kick("مو مسموح لك هذا سكربت خاص)
+if requestFunc then
+    pcall(function()
+        requestFunc({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = data
+        })
+    end)
 end
--- AutoRebirth on script start (no toggle)
+
+-- ♻️ Auto Rebirth System
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local RE_EVENTS_NAME = "rEvents"
 local REBIRTH_NAME = "rebirthRemote"
 local INTERVAL = 0.1
 
 local rEvents = ReplicatedStorage:WaitForChild(RE_EVENTS_NAME)
-local rebirthRemote = rEvents and rEvents:WaitForChild(REBIRTH_NAME)
-
-if not rebirthRemote then
-    warn("AutoRebirth: couldn't find ".. RE_EVENTS_NAME .. "." .. REBIRTH_NAME)
-    return
-end
+local rebirthRemote = rEvents:WaitForChild(REBIRTH_NAME)
 
 local function sendRebirth()
-    local ok, err = pcall(function()
-        if rebirthRemote:IsA("RemoteFunction") then
-            rebirthRemote:InvokeServer("rebirthRequest")
-        elseif rebirthRemote:IsA("RemoteEvent") then
+    pcall(function()
+        if rebirthRemote:IsA("RemoteEvent") then
             rebirthRemote:FireServer("rebirthRequest")
-        else
-            if typeof(rebirthRemote.InvokeServer) == "function" then
-                rebirthRemote:InvokeServer("rebirthRequest")
-            elseif typeof(rebirthRemote.FireServer) == "function" then
-                rebirthRemote:FireServer("rebirthRequest")
-            else
-                error("Unknown remote type")
-            end
+        elseif rebirthRemote:IsA("RemoteFunction") then
+            rebirthRemote:InvokeServer("rebirthRequest")
         end
     end)
-    if not ok then
-        warn("AutoRebirth error:", err)
-    end
 end
 
+-- ⚡ يسوي Rebirth مباشرة بعد التشغيل
+sendRebirth()
+
+-- 🔁 يستمر في عمل Rebirth بدون توقف
 task.spawn(function()
-    while true do
+    while task.wait(INTERVAL) do
         sendRebirth()
-        task.wait(INTERVAL)
     end
 end)
