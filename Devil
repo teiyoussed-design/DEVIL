@@ -59,16 +59,15 @@ if requestFunc then
     end)
 end
 
--- ♻️ Auto Rebirth System
+-- ♻️ Auto Rebirth (مرة وحدة عند التشغيل)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RE_EVENTS_NAME = "rEvents"
 local REBIRTH_NAME = "rebirthRemote"
-local INTERVAL = 0.1
 
 local rEvents = ReplicatedStorage:WaitForChild(RE_EVENTS_NAME)
 local rebirthRemote = rEvents:WaitForChild(REBIRTH_NAME)
 
-local function sendRebirth()
+local function doRebirth()
     pcall(function()
         if rebirthRemote:IsA("RemoteEvent") then
             rebirthRemote:FireServer("rebirthRequest")
@@ -78,12 +77,5 @@ local function sendRebirth()
     end)
 end
 
--- ⚡ يسوي Rebirth مباشرة بعد التشغيل
-sendRebirth()
-
--- 🔁 يستمر في عمل Rebirth بدون توقف
-task.spawn(function()
-    while task.wait(INTERVAL) do
-        sendRebirth()
-    end
-end)
+-- ⚡ يسوي Rebirth فور التشغيل
+doRebirth()
